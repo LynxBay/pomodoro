@@ -78,10 +78,12 @@
         sessionCount++;
         sessionCountEl.textContent = sessionCount;
         playBeep();
+        sendNotification('番茄钟', '专注结束！休息一下吧');
         // Auto-switch to break
         setMode(sessionCount % 4 === 0 ? 'longBreak' : 'shortBreak');
       } else {
         playBeep();
+        sendNotification('番茄钟', '休息结束！开始专注吧');
         setMode('work');
       }
       return;
@@ -115,13 +117,25 @@
     updateDisplay();
   }
 
+  function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function sendNotification(title, body) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, { body });
+    }
+  }
+
   function playBeep() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      osc.connect(ctx.destination);
       osc.frequency.value = 800;
       gain.gain.value = 0.3;
       osc.start();
@@ -132,7 +146,10 @@
   }
 
   // Event listeners
-  startBtn.addEventListener('click', toggleTimer);
+  startBtn.addEventListener('click', () => {
+    requestNotificationPermission();
+    toggleTimer();
+  });
   resetBtn.addEventListener('click', resetTimer);
 
   $$('.tab').forEach((tab) => {
