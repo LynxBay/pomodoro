@@ -30,6 +30,23 @@
     return [String(m).padStart(2, '0'), String(s).padStart(2, '0')];
   }
 
+  const MODE_LABELS = {
+    work: '专注',
+    shortBreak: '短休息',
+    longBreak: '长休息',
+  };
+  const BASE_TITLE = document.title;
+
+  function updateTitle() {
+    const [m, s] = formatTime(timeLeft);
+    const label = MODE_LABELS[currentMode];
+    document.title = `${m}:${s} - ${label} | ${BASE_TITLE}`;
+  }
+
+  function resetTitle() {
+    document.title = BASE_TITLE;
+  }
+
   function updateDisplay() {
     const [m, s] = formatTime(timeLeft);
     minutesEl.textContent = m;
@@ -37,6 +54,8 @@
 
     const progress = totalTime > 0 ? timeLeft / totalTime : 0;
     ringProgress.style.strokeDashoffset = circumference * (1 - progress);
+
+    updateTitle();
   }
 
   function setMode(mode) {
@@ -154,6 +173,19 @@
 
   $$('.tab').forEach((tab) => {
     tab.addEventListener('click', () => setMode(tab.dataset.mode));
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      requestNotificationPermission();
+      toggleTimer();
+    } else if (e.code === 'KeyR') {
+      e.preventDefault();
+      resetTimer();
+    }
   });
 
   // Init
